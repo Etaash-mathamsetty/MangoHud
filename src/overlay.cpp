@@ -119,7 +119,7 @@ void update_hw_info(const struct overlay_params& params, uint32_t vendorID)
    }
    if (params.enabled[OVERLAY_PARAM_ENABLED_gpu_stats] || logger->is_active()) {
       if (vendorID == 0x1002)
-         getAmdGpuInfo();
+         getAmdGpuInfo(0);
 #ifdef __linux__
       if (gpu_metrics_exists)
          amdgpu_get_metrics();
@@ -819,6 +819,7 @@ void init_gpu_stats(uint32_t& vendorID, uint32_t reported_deviceID, overlay_para
       string drm = "/sys/class/drm/";
 
       auto dirs = ls(drm.c_str(), "card");
+      int gpu_index = 0;
       for (auto& dir : dirs) {
          if (dir.find("-") != std::string::npos) {
              continue; // filter display adapters
@@ -864,56 +865,58 @@ void init_gpu_stats(uint32_t& vendorID, uint32_t reported_deviceID, overlay_para
          const std::string gpu_metrics_path = device_path + "/gpu_metrics";
          if (amdgpu_verify_metrics(gpu_metrics_path)) {
             gpu_metrics_exists = true;
-            metrics_path = gpu_metrics_path;
+            metrics_paths.push_back(gpu_metrics_path);
             SPDLOG_DEBUG("Using gpu_metrics of {}", gpu_metrics_path);
          }
 
-         if (!amdgpu.vram_total)
-            amdgpu.vram_total = fopen((device_path + "/mem_info_vram_total").c_str(), "r");
-         if (!amdgpu.vram_used)
-            amdgpu.vram_used = fopen((device_path + "/mem_info_vram_used").c_str(), "r");
-         if (!amdgpu.gtt_used)
-            amdgpu.gtt_used = fopen((device_path + "/mem_info_gtt_used").c_str(), "r");
+         if(gpu_index >= amdgpus.size())
+            amdgpus.push_back(amdgpu_files {});
+
+         if (!amdgpus[gpu_index].vram_total)
+            amdgpus[gpu_index].vram_total = fopen((device_path + "/mem_info_vram_total").c_str(), "r");
+         if (!amdgpus[gpu_index].vram_used)
+            amdgpus[gpu_index].vram_used = fopen((device_path + "/mem_info_vram_used").c_str(), "r");
+         if (!amdgpus[gpu_index].gtt_used)
+            amdgpus[gpu_index].gtt_used = fopen((device_path + "/mem_info_gtt_used").c_str(), "r");
 
          const std::string hwmon_path = device_path + "/hwmon/";
          const auto dirs = ls(hwmon_path.c_str(), "hwmon", LS_DIRS);
          for (const auto& dir : dirs) {
-            if (!amdgpu.temp)
-               amdgpu.temp = fopen((hwmon_path + dir + "/temp1_input").c_str(), "r");
-            if (!amdgpu.junction_temp)
-               amdgpu.junction_temp = fopen((hwmon_path + dir + "/temp2_input").c_str(), "r");
-            if (!amdgpu.memory_temp)
-               amdgpu.memory_temp = fopen((hwmon_path + dir + "/temp3_input").c_str(), "r");
-            if (!amdgpu.core_clock)
-               amdgpu.core_clock = fopen((hwmon_path + dir + "/freq1_input").c_str(), "r");
-            if (!amdgpu.gpu_voltage_soc)
-               amdgpu.gpu_voltage_soc = fopen((hwmon_path + dir + "/in0_input").c_str(), "r"); 
+            if (!amdgpus[gpu_index].temp)
+               amdgpus[gpu_index].temp = fopen((hwmon_path + dir + "/temp1_input").c_str(), "r");
+            if (!amdgpus[gpu_index].junction_temp)
+               amdgpus[gpu_index].junction_temp = fopen((hwmon_path + dir + "/temp2_input").c_str(), "r");
+            if (!amdgpus[gpu_index].memory_temp)
+               amdgpus[gpu_index].memory_temp = fopen((hwmon_path + dir + "/temp3_input").c_str(), "r");
+            if (!amdgpus[gpu_index].core_clock)
+               amdgpus[gpu_index].core_clock = fopen((hwmon_path + dir + "/freq1_input").c_str(), "r");
+            if (!amdgpus[gpu_index].gpu_voltage_soc)
+               amdgpus[gpu_index].gpu_voltage_soc = fopen((hwmon_path + dir + "/in0_input").c_str(), "r"); 
          }
 
-         if (!metrics_path.empty())
-            break;
+         if (metrics_paths.size() > gpu_index)
+            continue;
 
          // The card output nodes - cardX-output, will point to the card node
          // As such the actual metrics nodes will be missing.
-         amdgpu.busy = fopen((device_path + "/gpu_busy_percent").c_str(), "r");
-         if (!amdgpu.busy)
+         amdgpus[gpu_index].busy = fopen((device_path + "/gpu_busy_percent").c_str(), "r");
+         if (!amdgpus[gpu_index].busy)
             continue;
 
          SPDLOG_DEBUG("using amdgpu path: {}", device_path);
 
          for (const auto& dir : dirs) {
-            if (!amdgpu.memory_clock)
-               amdgpu.memory_clock = fopen((hwmon_path + dir + "/freq2_input").c_str(), "r");
-            if (!amdgpu.power_usage)
-               amdgpu.power_usage = fopen((hwmon_path + dir + "/power1_average").c_str(), "r");
-            if (!amdgpu.fan)
-               amdgpu.fan = fopen((hwmon_path + dir + "/fan1_input").c_str(), "r");
+            if (!amdgpus[gpu_index].memory_clock)
+               amdgpus[gpu_index].memory_clock = fopen((hwmon_path + dir + "/freq2_input").c_str(), "r");
+            if (!amdgpus[gpu_index].power_usage)
+               amdgpus[gpu_index].power_usage = fopen((hwmon_path + dir + "/power1_average").c_str(), "r");
+            if (!amdgpus[gpu_index].fan)
+               amdgpus[gpu_index].fan = fopen((hwmon_path + dir + "/fan1_input").c_str(), "r");
          }
-         break;
       }
 
       // don't bother then
-      if (metrics_path.empty() && !amdgpu.busy && vendorID != 0x8086) {
+      if (metrics_paths.size() == 0 && !amdgpus[gpu_index].busy && vendorID != 0x8086) {
          params.enabled[OVERLAY_PARAM_ENABLED_gpu_stats] = false;
       }
    }

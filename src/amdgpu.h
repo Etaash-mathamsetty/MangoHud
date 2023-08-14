@@ -15,10 +15,10 @@
 #define METRICS_SAMPLE_COUNT (METRICS_UPDATE_PERIOD_MS/METRICS_POLLING_PERIOD_MS)
 #define NUM_HBM_INSTANCES 4
 
-#define UPDATE_METRIC_AVERAGE(FIELD) do { int value_sum = 0; for (size_t s=0; s < METRICS_SAMPLE_COUNT; s++) { value_sum += metrics_buffer[s].FIELD; } amdgpu_common_metrics.FIELD = value_sum / METRICS_SAMPLE_COUNT; } while(0)
-#define UPDATE_METRIC_AVERAGE_FLOAT(FIELD) do { float value_sum = 0; for (size_t s=0; s < METRICS_SAMPLE_COUNT; s++) { value_sum += metrics_buffer[s].FIELD; } amdgpu_common_metrics.FIELD = value_sum / METRICS_SAMPLE_COUNT; } while(0)
-#define UPDATE_METRIC_MAX(FIELD) do { int cur_max = metrics_buffer[0].FIELD; for (size_t s=1; s < METRICS_SAMPLE_COUNT; s++) { cur_max = MAX(cur_max, metrics_buffer[s].FIELD); }; amdgpu_common_metrics.FIELD = cur_max; } while(0)
-#define UPDATE_METRIC_LAST(FIELD) do { amdgpu_common_metrics.FIELD = metrics_buffer[METRICS_SAMPLE_COUNT - 1].FIELD; } while(0)
+#define UPDATE_METRIC_AVERAGE(GPUINDEX, FIELD) do { int value_sum = 0; for (size_t s=0; s < METRICS_SAMPLE_COUNT; s++) { value_sum += metrics_buffer[s].FIELD; } amdgpus_common_metrics[GPUINDEX].FIELD = value_sum / METRICS_SAMPLE_COUNT; } while(0)
+#define UPDATE_METRIC_AVERAGE_FLOAT(GPUINDEX, FIELD) do { float value_sum = 0; for (size_t s=0; s < METRICS_SAMPLE_COUNT; s++) { value_sum += metrics_buffer[s].FIELD; } amdgpus_common_metrics[GPUINDEX].FIELD = value_sum / METRICS_SAMPLE_COUNT; } while(0)
+#define UPDATE_METRIC_MAX(GPUINDEX, FIELD) do { int cur_max = metrics_buffer[0].FIELD; for (size_t s=1; s < METRICS_SAMPLE_COUNT; s++) { cur_max = MAX(cur_max, metrics_buffer[s].FIELD); }; amdgpus_common_metrics[GPUINDEX].FIELD = cur_max; } while(0)
+#define UPDATE_METRIC_LAST(GPUINDEX, FIELD) do { amdgpus_common_metrics[GPUINDEX].FIELD = metrics_buffer[METRICS_SAMPLE_COUNT - 1].FIELD; } while(0)
 
 struct metrics_table_header {
 	uint16_t			structure_size;
@@ -189,9 +189,9 @@ struct amdgpu_common_metrics {
 
 bool amdgpu_verify_metrics(const std::string& path);
 void amdgpu_get_metrics();
-extern std::string metrics_path;
+extern std::vector<std::string> metrics_paths;
 extern std::condition_variable amdgpu_c;
 extern bool amdgpu_run_thread;
-void amdgpu_get_instant_metrics(struct amdgpu_common_metrics *metrics);
+void amdgpu_get_instant_metrics(int gpu_index, struct amdgpu_common_metrics *metrics);
 void amdgpu_metrics_polling_thread();
-void amdgpu_get_samples_and_copy(struct amdgpu_common_metrics metrics_buffer[METRICS_SAMPLE_COUNT], bool &gpu_load_needs_dividing);
+void amdgpu_get_samples_and_copy(int gpu_index, struct amdgpu_common_metrics metrics_buffer[METRICS_SAMPLE_COUNT], bool &gpu_load_needs_dividing);

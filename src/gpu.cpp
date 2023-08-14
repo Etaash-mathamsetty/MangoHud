@@ -81,112 +81,112 @@ nvapi_util();
 #endif
 }
 
-void getAmdGpuInfo(){
+void getAmdGpuInfo(int index){
 #ifdef __linux__
     int64_t value = 0;
-    if (metrics_path.empty()){
-        if (amdgpu.busy) {
-            rewind(amdgpu.busy);
-            fflush(amdgpu.busy);
+    if (metrics_paths[index].empty()){
+        if (amdgpus[index].busy) {
+            rewind(amdgpus[index].busy);
+            fflush(amdgpus[index].busy);
             int value = 0;
-            if (fscanf(amdgpu.busy, "%d", &value) != 1)
+            if (fscanf(amdgpus[index].busy, "%d", &value) != 1)
                 value = 0;
             gpu_info.load = value;
         }
 
 
-        if (amdgpu.memory_clock) {
-            rewind(amdgpu.memory_clock);
-            fflush(amdgpu.memory_clock);
-            if (fscanf(amdgpu.memory_clock, "%" PRId64, &value) != 1)
+        if (amdgpus[index].memory_clock) {
+            rewind(amdgpus[index].memory_clock);
+            fflush(amdgpus[index].memory_clock);
+            if (fscanf(amdgpus[index].memory_clock, "%" PRId64, &value) != 1)
                 value = 0;
 
             gpu_info.MemClock = value / 1000000;
         }
 
-        if (amdgpu.power_usage) {
-            rewind(amdgpu.power_usage);
-            fflush(amdgpu.power_usage);
-            if (fscanf(amdgpu.power_usage, "%" PRId64, &value) != 1)
+        if (amdgpus[index].power_usage) {
+            rewind(amdgpus[index].power_usage);
+            fflush(amdgpus[index].power_usage);
+            if (fscanf(amdgpus[index].power_usage, "%" PRId64, &value) != 1)
                 value = 0;
 
             gpu_info.powerUsage = value / 1000000;
         }
 
-        if (amdgpu.fan) {
-            rewind(amdgpu.fan);
-            fflush(amdgpu.fan);
-            if (fscanf(amdgpu.fan, "%" PRId64, &value) != 1)
+        if (amdgpus[index].fan) {
+            rewind(amdgpus[index].fan);
+            fflush(amdgpus[index].fan);
+            if (fscanf(amdgpus[index].fan, "%" PRId64, &value) != 1)
                 value = 0;
             gpu_info.fan_speed = value;
         }
     }
 
-    if (amdgpu.vram_total) {
-        rewind(amdgpu.vram_total);
-        fflush(amdgpu.vram_total);
-        if (fscanf(amdgpu.vram_total, "%" PRId64, &value) != 1)
+    if (amdgpus[index].vram_total) {
+        rewind(amdgpus[index].vram_total);
+        fflush(amdgpus[index].vram_total);
+        if (fscanf(amdgpus[index].vram_total, "%" PRId64, &value) != 1)
             value = 0;
         gpu_info.memoryTotal = float(value) / (1024 * 1024 * 1024);
     }
 
-    if (amdgpu.vram_used) {
-        rewind(amdgpu.vram_used);
-        fflush(amdgpu.vram_used);
-        if (fscanf(amdgpu.vram_used, "%" PRId64, &value) != 1)
+    if (amdgpus[index].vram_used) {
+        rewind(amdgpus[index].vram_used);
+        fflush(amdgpus[index].vram_used);
+        if (fscanf(amdgpus[index].vram_used, "%" PRId64, &value) != 1)
             value = 0;
         gpu_info.memoryUsed = float(value) / (1024 * 1024 * 1024);
     }
     // On some GPUs SMU can sometimes return the wrong temperature.
     // As HWMON is way more visible than the SMU metrics, let's always trust it as it is the most likely to work
-    if (amdgpu.core_clock) {
-        rewind(amdgpu.core_clock);
-        fflush(amdgpu.core_clock);
-        if (fscanf(amdgpu.core_clock, "%" PRId64, &value) != 1)
+    if (amdgpus[index].core_clock) {
+        rewind(amdgpus[index].core_clock);
+        fflush(amdgpus[index].core_clock);
+        if (fscanf(amdgpus[index].core_clock, "%" PRId64, &value) != 1)
             value = 0;
 
         gpu_info.CoreClock = value / 1000000;
     }
 
-    if (amdgpu.temp){
-        rewind(amdgpu.temp);
-        fflush(amdgpu.temp);
+    if (amdgpus[index].temp){
+        rewind(amdgpus[index].temp);
+        fflush(amdgpus[index].temp);
         int value = 0;
-        if (fscanf(amdgpu.temp, "%d", &value) != 1)
+        if (fscanf(amdgpus[index].temp, "%d", &value) != 1)
             value = 0;
         gpu_info.temp = value / 1000;
     }
 
-    if (amdgpu.junction_temp){
-        rewind(amdgpu.junction_temp);
-        fflush(amdgpu.junction_temp);
+    if (amdgpus[index].junction_temp){
+        rewind(amdgpus[index].junction_temp);
+        fflush(amdgpus[index].junction_temp);
         int value = 0;
-        if (fscanf(amdgpu.junction_temp, "%d", &value) != 1)
+        if (fscanf(amdgpus[index].junction_temp, "%d", &value) != 1)
             value = 0;
         gpu_info.junction_temp = value / 1000;
     }
 
-    if (amdgpu.memory_temp){
-        rewind(amdgpu.memory_temp);
-        fflush(amdgpu.memory_temp);
+    if (amdgpus[index].memory_temp){
+        rewind(amdgpus[index].memory_temp);
+        fflush(amdgpus[index].memory_temp);
         int value = 0;
-        if (fscanf(amdgpu.memory_temp, "%d", &value) != 1)
+        if (fscanf(amdgpus[index].memory_temp, "%d", &value) != 1)
             value = 0;
         gpu_info.memory_temp = value / 1000;
     }
 
-    if (amdgpu.gtt_used) {
-        rewind(amdgpu.gtt_used);
-        fflush(amdgpu.gtt_used);
-        if (fscanf(amdgpu.gtt_used, "%" PRId64, &value) != 1)
+    if (amdgpus[index].gtt_used) {
+        rewind(amdgpus[index].gtt_used);
+        fflush(amdgpus[index].gtt_used);
+        if (fscanf(amdgpus[index].gtt_used, "%" PRId64, &value) != 1)
             value = 0;
         gpu_info.gtt_used = float(value) / (1024 * 1024 * 1024);
     }
 
-    if (amdgpu.gpu_voltage_soc) {
-        rewind(amdgpu.gpu_voltage_soc);
-        fflush(amdgpu.gpu_voltage_soc);
-        if (fscanf(amdgpu.gpu_voltage_soc, "%" PRId64, &value) != 1)
+    if (amdgpus[index].gpu_voltage_soc) {
+        rewind(amdgpus[index].gpu_voltage_soc);
+        fflush(amdgpus[index].gpu_voltage_soc);
+        if (fscanf(amdgpus[index].gpu_voltage_soc, "%" PRId64, &value) != 1)
             value = 0;
         gpu_info.voltage = value;
     }

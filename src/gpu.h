@@ -4,6 +4,7 @@
 
 #include <cstdio>
 #include <cstdint>
+#include <vector>
 #include "overlay_params.h"
 
 struct amdgpu_files
@@ -23,7 +24,7 @@ struct amdgpu_files
     FILE *gpu_voltage_soc;
 };
 
-extern amdgpu_files amdgpu;
+extern std::vector<amdgpu_files> amdgpus;
 
 struct gpuInfo{
     int load;
@@ -49,7 +50,7 @@ struct gpuInfo{
 extern struct gpuInfo gpu_info;
 
 void getNvidiaGpuInfo(const struct overlay_params& params);
-void getAmdGpuInfo(void);
+void getAmdGpuInfo(int);
 void getIntelGpuInfo();
 bool checkNvidia(const char *pci_dev);
 extern void nvapi_util();
