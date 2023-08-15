@@ -37,7 +37,9 @@ bool amdgpu_verify_metrics(const std::string& path)
 		case 1: // v1_1, v1_2, v1_3
 			if(header.content_revision<=0 || header.content_revision>3)// v1_0, not naturally aligned
 				break;
-			cpuStats.cpu_type = "GPU";
+			// Read APU power even with 3 GPUs
+			if(cpuStats.cpu_type != "APU")
+				cpuStats.cpu_type = "GPU";
 			return true;
 		case 2: // v2_1, v2_2, v2_3
 			if(header.content_revision<=0 || header.content_revision>3)// v2_0, not naturally aligned
