@@ -26,12 +26,12 @@ static void test_amdgpu_get_instant_metrics(void **state) {
 
     // fail fetch gpu_metrics file
     metrics_path = "./missing_file";
-    amdgpu_get_instant_metrics(&metrics);
+    amdgpu_get_instant_metrics(0, &metrics);
 
     // DGPU
     metrics_path = "./gpu_metrics";
     metrics = {};
-    amdgpu_get_instant_metrics(&metrics);
+    amdgpu_get_instant_metrics(0, &metrics);
     assert_int_equal(metrics.gpu_load_percent, 64);
     assert_float_equal(metrics.average_gfx_power_w, 33, 0);
     assert_float_equal(metrics.average_cpu_power_w, 0, 0);
@@ -48,7 +48,7 @@ static void test_amdgpu_get_instant_metrics(void **state) {
     // DGPU
     metrics_path = "./gpu_metrics_reserved_throttle_bits";
     metrics = {};
-    amdgpu_get_instant_metrics(&metrics);
+    amdgpu_get_instant_metrics(0, &metrics);
     assert_false(metrics.is_power_throttled);
     assert_false(metrics.is_current_throttled);
     assert_false(metrics.is_temp_throttled);
@@ -56,7 +56,7 @@ static void test_amdgpu_get_instant_metrics(void **state) {
 
     metrics_path = "./gpu_metrics_apu";
     metrics = {};
-    amdgpu_get_instant_metrics(&metrics);
+    amdgpu_get_instant_metrics(0, &metrics);
     assert_int_equal(metrics.gpu_load_percent, 100);
     assert_float_equal(metrics.average_gfx_power_w, 6.161, 0);
     assert_float_equal(metrics.average_cpu_power_w, 9.235, 0);
@@ -77,9 +77,9 @@ static void test_amdgpu_get_samples_and_copy(void **state) {
 
     struct amdgpu_common_metrics metrics_buffer[100];
     bool gpu_load_needs_dividing = false;  //some GPUs report load as centipercent
-    amdgpu_get_samples_and_copy(metrics_buffer, gpu_load_needs_dividing);
+    amdgpu_get_samples_and_copy(0, metrics_buffer, gpu_load_needs_dividing);
     gpu_load_needs_dividing = true;
-    amdgpu_get_samples_and_copy(metrics_buffer, gpu_load_needs_dividing);
+    amdgpu_get_samples_and_copy(0, metrics_buffer, gpu_load_needs_dividing);
 }
 
 static void test_amdgpu_get_metrics(void **state) {

@@ -54,7 +54,7 @@ bool amdgpu_verify_metrics(const std::string& path)
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define IS_VALID_METRIC(FIELD) (FIELD != 0xffff)
-void amdgpu_get_instant_metrics(int gpu_index, struct amdgpu_common_metrics *metrics) {
+void amdgpu_get_instant_metrics(size_t gpu_index, struct amdgpu_common_metrics *metrics) {
 	FILE *f;
 	void *buf[MAX(sizeof(struct gpu_metrics_v1_3), sizeof(struct gpu_metrics_v2_3))/sizeof(void*)+1];
 	struct metrics_table_header* header = (metrics_table_header*)buf;
@@ -65,7 +65,7 @@ void amdgpu_get_instant_metrics(int gpu_index, struct amdgpu_common_metrics *met
 
 	// Read the whole file
 	if (fread(buf, sizeof(buf), 1, f) != 0) {
-		SPDLOG_DEBUG("amdgpu metrics file '{}' is larger than the buffer", metrics_path.c_str());
+		SPDLOG_DEBUG("amdgpu metrics file '{}' is larger than the buffer", metrics_paths[gpu_index].c_str());
 		fclose(f);
 		return;
 	}
@@ -185,7 +185,7 @@ void amdgpu_get_instant_metrics(int gpu_index, struct amdgpu_common_metrics *met
 	metrics->is_other_throttled = ((indep_throttle_status >> 56) & 0xFF) != 0;
 }
 
-void amdgpu_get_samples_and_copy(int gpu_index, struct amdgpu_common_metrics metrics_buffer[METRICS_SAMPLE_COUNT], bool &gpu_load_needs_dividing) {
+void amdgpu_get_samples_and_copy(size_t gpu_index, struct amdgpu_common_metrics metrics_buffer[METRICS_SAMPLE_COUNT], bool &gpu_load_needs_dividing) {
 		// Get all the samples
 		for (size_t cur_sample_id=0; cur_sample_id < METRICS_SAMPLE_COUNT; cur_sample_id++) {
 			amdgpu_get_instant_metrics(gpu_index, &metrics_buffer[cur_sample_id]);
@@ -225,7 +225,7 @@ void amdgpu_metrics_polling_thread() {
 	struct amdgpu_common_metrics metrics_buffer[METRICS_SAMPLE_COUNT];
 	bool gpu_load_needs_dividing = false;  //some GPUs report load as centipercent
 
-	for(int gpu_index = 0; gpu_index < amdgpus_common_metrics.size(); gpu_index++) {
+	for(size_t gpu_index = 0; gpu_index < amdgpus_common_metrics.size(); gpu_index++) {
 		// Initial poll of the metrics, so that we have values to display as fast as possible
 		amdgpu_get_instant_metrics(gpu_index, &amdgpus_common_metrics[gpu_index]);
 		if (amdgpus_common_metrics[gpu_index].gpu_load_percent > 100){
@@ -250,7 +250,7 @@ void amdgpu_metrics_polling_thread() {
 	}
 }
 
-void amdgpu_get_metrics(int gpu_index){
+void amdgpu_get_metrics(size_t gpu_index){
 	static bool init = false;
 	if (!init){
 		std::thread(amdgpu_metrics_polling_thread).detach();

@@ -188,10 +188,11 @@ struct amdgpu_common_metrics {
 };
 
 bool amdgpu_verify_metrics(const std::string& path);
-void amdgpu_get_metrics();
+void amdgpu_get_metrics(size_t);
 extern std::vector<std::string> metrics_paths;
+extern std::vector<struct amdgpu_common_metrics> amdgpus_common_metrics;
 extern std::condition_variable amdgpu_c;
 extern bool amdgpu_run_thread;
-void amdgpu_get_instant_metrics(int gpu_index, struct amdgpu_common_metrics *metrics);
+void amdgpu_get_instant_metrics(size_t gpu_index, struct amdgpu_common_metrics *metrics);
 void amdgpu_metrics_polling_thread();
-void amdgpu_get_samples_and_copy(int gpu_index, struct amdgpu_common_metrics metrics_buffer[METRICS_SAMPLE_COUNT], bool &gpu_load_needs_dividing);
+void amdgpu_get_samples_and_copy(size_t gpu_index, struct amdgpu_common_metrics metrics_buffer[METRICS_SAMPLE_COUNT], bool &gpu_load_needs_dividing);

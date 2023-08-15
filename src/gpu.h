@@ -24,7 +24,7 @@ struct amdgpu_files
     FILE *gpu_voltage_soc;
 };
 
-extern std::vector<amdgpu_files> amdgpus;
+extern std::vector<amdgpu_files> amdgpu;
 
 struct gpuInfo{
     int load;
