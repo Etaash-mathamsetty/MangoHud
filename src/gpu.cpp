@@ -81,7 +81,7 @@ nvapi_util();
 #endif
 }
 
-void getAmdGpuInfo(int index){
+void getAmdGpuInfo(size_t index){
 #ifdef __linux__
     int64_t value = 0;
     if (metrics_paths[index].empty()){

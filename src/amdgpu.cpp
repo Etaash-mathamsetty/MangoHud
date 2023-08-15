@@ -232,20 +232,25 @@ void amdgpu_metrics_polling_thread() {
 			gpu_load_needs_dividing = true;
 			amdgpus_common_metrics[gpu_index].gpu_load_percent /= 100;
 		}
+	}
 
-		// Set all the fields to 0 by default. Only done once as we're just replacing previous values after
-		memset(metrics_buffer, 0, sizeof(metrics_buffer));
+	// Set all the fields to 0 by default. Only done once as we're just replacing previous values after
+	memset(metrics_buffer, 0, sizeof(metrics_buffer));
+	size_t gpu_index = 0;
 
-		while (1) {
-			std::unique_lock<std::mutex> lock(amdgpu_m);
-			amdgpu_c.wait(lock, []{return amdgpu_run_thread;});
-			lock.unlock();
-	#ifndef TEST_ONLY
-			if (HUDElements.params->no_display && !logger->is_active())
-				usleep(100000);
-			else
-	#endif
-				amdgpu_get_samples_and_copy(gpu_index, metrics_buffer, gpu_load_needs_dividing);
+	while (true) {
+		std::unique_lock<std::mutex> lock(amdgpu_m);
+		amdgpu_c.wait(lock, []{return amdgpu_run_thread;});
+		lock.unlock();
+#ifndef TEST_ONLY
+		if (HUDElements.params->no_display && !logger->is_active())
+			usleep(100000);
+		else
+#endif
+		{
+			amdgpu_get_samples_and_copy(gpu_index, metrics_buffer, gpu_load_needs_dividing);
+
+			gpu_index = (gpu_index + 1) % amdgpus_common_metrics.size();
 		}
 	}
 }

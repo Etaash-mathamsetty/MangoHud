@@ -819,22 +819,14 @@ void init_gpu_stats(uint32_t& vendorID, uint32_t reported_deviceID, overlay_para
       string drm = "/sys/class/drm/";
 
       auto dirs = ls(drm.c_str(), "card");
-      size_t gpu_index = 0;
+      size_t gpu_index = -1;
       for (auto& dir : dirs) {
          if (dir.find("-") != std::string::npos) {
              continue; // filter display adapters
          }
          path = drm + dir;
 
-         SPDLOG_DEBUG("drm path check: {}", path);
-         if (pci_bus_parsed && pci_dev) {
-            string pci_device = read_symlink((path + "/device").c_str());
-            SPDLOG_DEBUG("PCI device symlink: '{}'", pci_device);
-            if (!ends_with(pci_device, pci_dev)) {
-               SPDLOG_DEBUG("skipping GPU, no PCI ID match");
-               continue;
-            }
-         }
+         SPDLOG_DEBUG("drm path: {}", path);
 
          FILE *fp;
          string device = path + "/device/device";
@@ -861,12 +853,15 @@ void init_gpu_stats(uint32_t& vendorID, uint32_t reported_deviceID, overlay_para
             fclose(fp);
          }
 
+         gpu_index++;
+
          const std::string device_path = path + "/device";
          const std::string gpu_metrics_path = device_path + "/gpu_metrics";
          if (amdgpu_verify_metrics(gpu_metrics_path)) {
             gpu_metrics_exists = true;
             metrics_paths.push_back(gpu_metrics_path);
-            SPDLOG_DEBUG("Using gpu_metrics of {}", gpu_metrics_path);
+            if(gpu_index == 0)
+               SPDLOG_DEBUG("Using gpu_metrics of {}", gpu_metrics_path);
          }
 
          if(gpu_index >= amdgpu.size())
@@ -924,6 +919,8 @@ void init_gpu_stats(uint32_t& vendorID, uint32_t reported_deviceID, overlay_para
       if (metrics_paths.size() == 0 && !amdgpu[gpu_index].busy && vendorID != 0x8086) {
          params.enabled[OVERLAY_PARAM_ENABLED_gpu_stats] = false;
       }
+
+      SPDLOG_DEBUG("num AMDGPUS {}", amdgpu.size());
    }
 #endif
    if (!params.permit_upload)
