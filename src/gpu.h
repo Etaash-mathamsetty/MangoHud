@@ -45,6 +45,7 @@ struct gpuInfo{
     float gtt_used;
     int fan_speed;
     int voltage;
+    uint32_t vendor;
 };
 
 extern std::vector<struct gpuInfo> gpu_info;
