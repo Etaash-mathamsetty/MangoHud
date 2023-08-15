@@ -282,7 +282,7 @@ bool CPUStats::ReadcpuTempFile(int& temp) {
 
 bool CPUStats::UpdateCpuTemp() {
 	if (cpu_type == "APU"){
-        m_cpuDataTotal.temp = gpu_info.apu_cpu_temp;
+        m_cpuDataTotal.temp = gpu_info[apu_index].apu_cpu_temp;
         return true;
     } else {
         int temp = 0;
@@ -418,8 +418,8 @@ static bool get_cpu_power_rapl(CPUPowerData* cpuPowerData, float& power) {
     return true;
 }
 
-static bool get_cpu_power_amdgpu(float& power) {
-    power = gpu_info.apu_cpu_power;
+bool CPUStats::get_cpu_power_amdgpu(float& power) {
+    power = gpu_info[apu_index].apu_cpu_power;
     return true;
 }
 
@@ -660,6 +660,7 @@ bool CPUStats::InitCpuPowerData() {
     }
 
     m_cpuPowerData.reset(cpuPowerData);
+    SPDLOG_DEBUG("{}", m_cpuPowerData->source);
     return true;
 }
 

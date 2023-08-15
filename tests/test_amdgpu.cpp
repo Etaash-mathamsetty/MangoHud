@@ -14,10 +14,10 @@ extern "C" {
 static void test_amdgpu_verify_metrics(void **state) {
     UNUSED(state);
 
-    assert_false(amdgpu_verify_metrics("./missing_file"));
+    assert_false(amdgpu_verify_metrics(0, "./missing_file"));
     // unsupported struct size, format and content revision
-    assert_false(amdgpu_verify_metrics("./gpu_metrics_invalid"));
-    assert_true (amdgpu_verify_metrics("./gpu_metrics"));
+    assert_false(amdgpu_verify_metrics(0, "./gpu_metrics_invalid"));
+    assert_true (amdgpu_verify_metrics(0, "./gpu_metrics"));
 }
 
 static void test_amdgpu_get_instant_metrics(void **state) {

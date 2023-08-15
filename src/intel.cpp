@@ -83,5 +83,6 @@ void getIntelGpuInfo(){
         std::thread(intelGpuThread, runtime).detach();
     }
 
-    gpu_info = gpu_info_intel;
+    //TODO: Implement multigpu support with intel
+    gpu_info[0] = gpu_info_intel;
 }

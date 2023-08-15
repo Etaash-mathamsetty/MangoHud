@@ -171,7 +171,10 @@ public:
       return m_cpuDataTotal;
    }
    std::string cpu_type = "CPU";
+   size_t apu_index = 0;
 private:
+
+   bool get_cpu_power_amdgpu(float& power);
    unsigned long long int m_boottime = 0;
    std::vector<CPUData> m_cpuData;
    CPUData m_cpuDataTotal {};

@@ -119,10 +119,10 @@ void update_hw_info(const struct overlay_params& params, uint32_t vendorID)
    }
    if (params.enabled[OVERLAY_PARAM_ENABLED_gpu_stats] || logger->is_active()) {
       if (vendorID == 0x1002)
-         getAmdGpuInfo(0);
+         getAmdGpuInfo();
 #ifdef __linux__
       if (gpu_metrics_exists)
-         amdgpu_get_metrics(0);
+         amdgpu_get_metrics();
 #endif
       if (vendorID == 0x10de)
          getNvidiaGpuInfo(params);
@@ -148,12 +148,12 @@ void update_hw_info(const struct overlay_params& params, uint32_t vendorID)
       getIoStats(g_io_stats);
 #endif
 
-   currentLogData.gpu_load = gpu_info.load;
-   currentLogData.gpu_temp = gpu_info.temp;
-   currentLogData.gpu_core_clock = gpu_info.CoreClock;
-   currentLogData.gpu_mem_clock = gpu_info.MemClock;
-   currentLogData.gpu_vram_used = gpu_info.memoryUsed;
-   currentLogData.gpu_power = gpu_info.powerUsage;
+   currentLogData.gpu_load = gpu_info[0].load;
+   currentLogData.gpu_temp = gpu_info[0].temp;
+   currentLogData.gpu_core_clock = gpu_info[0].CoreClock;
+   currentLogData.gpu_mem_clock = gpu_info[0].MemClock;
+   currentLogData.gpu_vram_used = gpu_info[0].memoryUsed;
+   currentLogData.gpu_power = gpu_info[0].powerUsage;
 #ifdef __linux__
    currentLogData.ram_used = memused;
 #endif
@@ -770,7 +770,10 @@ void init_gpu_stats(uint32_t& vendorID, uint32_t reported_deviceID, overlay_para
    // NVIDIA
    if (vendorID == 0x10de)
       if(checkNvidia(pci_dev))
+      {
          vendorID = 0x10de;
+         gpu_info.push_back(gpuInfo {});
+      }
 
    string path;
    string drm = "/sys/class/drm/";
@@ -808,6 +811,7 @@ void init_gpu_stats(uint32_t& vendorID, uint32_t reported_deviceID, overlay_para
          path = drm + dir;
          drm_dev = dir;
          SPDLOG_DEBUG("Intel: using drm device {}", drm_dev);
+         gpu_info.push_back(gpuInfo {});
          break;
       }
    }
@@ -857,7 +861,7 @@ void init_gpu_stats(uint32_t& vendorID, uint32_t reported_deviceID, overlay_para
 
          const std::string device_path = path + "/device";
          const std::string gpu_metrics_path = device_path + "/gpu_metrics";
-         if (amdgpu_verify_metrics(gpu_metrics_path)) {
+         if (amdgpu_verify_metrics(gpu_index, gpu_metrics_path)) {
             gpu_metrics_exists = true;
             metrics_paths.push_back(gpu_metrics_path);
             if(gpu_index == 0)
@@ -868,6 +872,7 @@ void init_gpu_stats(uint32_t& vendorID, uint32_t reported_deviceID, overlay_para
          {
             amdgpu.push_back(amdgpu_files {});
             amdgpus_common_metrics.push_back(amdgpu_common_metrics {});
+            gpu_info.push_back(gpuInfo {});
          }
 
          if (!amdgpu[gpu_index].vram_total)

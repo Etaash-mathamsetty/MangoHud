@@ -18,7 +18,7 @@ std::mutex amdgpu_m;
 std::condition_variable amdgpu_c;
 bool amdgpu_run_thread = true;
 
-bool amdgpu_verify_metrics(const std::string& path)
+bool amdgpu_verify_metrics(size_t gpu_index, const std::string& path)
 {
 	metrics_table_header header {};
 	FILE *f;
@@ -45,6 +45,7 @@ bool amdgpu_verify_metrics(const std::string& path)
 			if(header.content_revision<=0 || header.content_revision>3)// v2_0, not naturally aligned
 				break;
 			cpuStats.cpu_type = "APU";
+			cpuStats.apu_index = gpu_index;
 			return true;
 		default:
 			break;
@@ -257,7 +258,7 @@ void amdgpu_metrics_polling_thread() {
 	}
 }
 
-void amdgpu_get_metrics(size_t gpu_index){
+void amdgpu_get_metrics(){
 	static bool init = false;
 	if (!init){
 		std::thread(amdgpu_metrics_polling_thread).detach();
@@ -265,23 +266,26 @@ void amdgpu_get_metrics(size_t gpu_index){
 	}
 
 	amdgpu_common_metrics_m.lock();
-	gpu_info.load = amdgpus_common_metrics[gpu_index].gpu_load_percent;
+	for(size_t gpu_index = 0; gpu_index < amdgpus_common_metrics.size(); gpu_index++)
+	{
+		gpu_info[gpu_index].load = amdgpus_common_metrics[gpu_index].gpu_load_percent;
 
-	gpu_info.powerUsage = amdgpus_common_metrics[gpu_index].average_gfx_power_w;
-	gpu_info.MemClock = amdgpus_common_metrics[gpu_index].current_uclk_mhz;
+		gpu_info[gpu_index].powerUsage = amdgpus_common_metrics[gpu_index].average_gfx_power_w;
+		gpu_info[gpu_index].MemClock = amdgpus_common_metrics[gpu_index].current_uclk_mhz;
 
-	// Use hwmon instead, see gpu.cpp
-	// gpu_info.CoreClock = amdgpu_common_metrics.current_gfxclk_mhz;
-	// gpu_info.temp = amdgpu_common_metrics.gpu_temp_c;
-	gpu_info.apu_cpu_power = amdgpus_common_metrics[gpu_index].average_cpu_power_w;
-	gpu_info.apu_cpu_temp = amdgpus_common_metrics[gpu_index].apu_cpu_temp_c;
+		// Use hwmon instead, see gpu.cpp
+		// gpu_info.CoreClock = amdgpu_common_metrics.current_gfxclk_mhz;
+		// gpu_info.temp = amdgpu_common_metrics.gpu_temp_c;
+		gpu_info[gpu_index].apu_cpu_power = amdgpus_common_metrics[gpu_index].average_cpu_power_w;
+		gpu_info[gpu_index].apu_cpu_temp = amdgpus_common_metrics[gpu_index].apu_cpu_temp_c;
 
-	gpu_info.is_power_throttled = amdgpus_common_metrics[gpu_index].is_power_throttled;
-	gpu_info.is_current_throttled = amdgpus_common_metrics[gpu_index].is_current_throttled;
-	gpu_info.is_temp_throttled = amdgpus_common_metrics[gpu_index].is_temp_throttled;
-	gpu_info.is_other_throttled = amdgpus_common_metrics[gpu_index].is_other_throttled;
+		gpu_info[gpu_index].is_power_throttled = amdgpus_common_metrics[gpu_index].is_power_throttled;
+		gpu_info[gpu_index].is_current_throttled = amdgpus_common_metrics[gpu_index].is_current_throttled;
+		gpu_info[gpu_index].is_temp_throttled = amdgpus_common_metrics[gpu_index].is_temp_throttled;
+		gpu_info[gpu_index].is_other_throttled = amdgpus_common_metrics[gpu_index].is_other_throttled;
 
-	gpu_info.fan_speed = amdgpus_common_metrics[gpu_index].fan_speed;
+		gpu_info[gpu_index].fan_speed = amdgpus_common_metrics[gpu_index].fan_speed;
+	}
 
 	amdgpu_common_metrics_m.unlock();
 }

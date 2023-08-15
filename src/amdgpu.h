@@ -187,8 +187,8 @@ struct amdgpu_common_metrics {
 	uint16_t fan_speed;
 };
 
-bool amdgpu_verify_metrics(const std::string& path);
-void amdgpu_get_metrics(size_t);
+bool amdgpu_verify_metrics(size_t gpu_index, const std::string& path);
+void amdgpu_get_metrics();
 extern std::vector<std::string> metrics_paths;
 extern std::vector<struct amdgpu_common_metrics> amdgpus_common_metrics;
 extern std::condition_variable amdgpu_c;

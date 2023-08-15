@@ -62,6 +62,7 @@ void nvapi_util()
     gpuUsages[0] = (NVAPI_MAX_USAGES_PER_GPU * 4) | 0x10000;
     (*NvAPI_EnumPhysicalGPUs)(gpuHandles, &gpuCount);
     (*NvAPI_GPU_GetUsages)(gpuHandles[0], gpuUsages);
-    gpu_info.load = gpuUsages[3];
+
+    gpu_info[0].load = gpuUsages[3];
 
 }

@@ -47,10 +47,10 @@ struct gpuInfo{
     int voltage;
 };
 
-extern struct gpuInfo gpu_info;
+extern std::vector<struct gpuInfo> gpu_info;
 
 void getNvidiaGpuInfo(const struct overlay_params& params);
-void getAmdGpuInfo(size_t);
+void getAmdGpuInfo();
 void getIntelGpuInfo();
 bool checkNvidia(const char *pci_dev);
 extern void nvapi_util();
