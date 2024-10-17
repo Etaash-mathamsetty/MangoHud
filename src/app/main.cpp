@@ -122,7 +122,7 @@ static void ctrl_thread(){
                     params.no_display = 0;
                     break;
                 case 3:
-                    params.no_display ? params.no_display = 0 : params.no_display = 1;
+                    params.no_display = !params.no_display;
                     break;
             }
         }
@@ -220,6 +220,17 @@ static void msg_read_thread(){
         {
             printf("mangoapp: msgrcv returned -1 with error %d - %s\n", errno, strerror(errno));
         }
+    }
+}
+
+static void input_thread(){
+    while(1){
+        {
+            std::unique_lock<std::mutex> lk(mangoapp_m);
+            check_keybinds(params, vendorID);
+            mangoapp_cv.notify_one();
+        }
+        this_thread::sleep_for(100ms);
     }
 }
 
@@ -349,6 +360,7 @@ int main(int, char**)
     sw_stats.engine = EngineTypes::GAMESCOPE;
     std::thread(msg_read_thread).detach();
     std::thread(ctrl_thread).detach();
+    std::thread(input_thread).detach();
     if(!logger) logger = std::make_unique<Logger>(HUDElements.params);
     Atom noFocusAtom = XInternAtom(x11_display, "GAMESCOPE_NO_FOCUS", False);
     uint32_t value = 1;
@@ -356,8 +368,6 @@ int main(int, char**)
                     PropModeReplace, (unsigned char *)&value, 1);
     // Main loop
     while (!glfwWindowShouldClose(window)){
-        check_keybinds(params, vendorID);
-
         if (!params.no_display){
             if (mangoapp_paused){
                 glfwRestoreWindow(window);
